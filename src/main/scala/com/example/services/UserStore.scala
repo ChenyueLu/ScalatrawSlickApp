@@ -3,8 +3,6 @@ package com.example.services
 import com.example.models.slick.User
 import com.example.models.UserDetails
 
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
 
 object UserStore {
 
@@ -23,13 +21,11 @@ object UserStore {
   }
 
   def getUserById(id: Int): Option[User] = {
-    User.get(id)
+    User.get(Some(id), None)
   }
 
-  def getUserByName(name: String): Option[UserDetails] = {
-    User.getByName(name) map{
-      ana => UserDetails(ana.id.get, ana.name, ana.age)
-    }
+  def getUserByName(name: String): Option[User] = {
+    User.get(None, Some(name))
   }
 
   def getAllUsers: List[UserDetails] = {
@@ -39,19 +35,14 @@ object UserStore {
   }
 
   def deleteUser(id: Int): Boolean = {
-    User.delete(id)
+    User.delete(Some(id), None)
   }
 
   def deleteUserByName(name: String): Boolean = {
-    User.deleteByName(name)
+    User.delete(None, Some(name))
   }
 
   def updateUser(id: Int, name: String, age: Int): Boolean = {
     User.update(id, name, age)
   }
-
-  def updateUserByName(name: String, age: Int): Boolean = {
-    User.updateByName(name, age)
-  }
-
 }

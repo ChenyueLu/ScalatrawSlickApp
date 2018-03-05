@@ -8,108 +8,99 @@ import org.slf4j.LoggerFactory
 import org.json4s._
 import com.example.models.UserData
 import com.example.services.UserStore
-import com.example.commons.JsonResponse
 import com.example.commons.Constants._
 
-import scala.util.Try
-import scala.util.{ Success, Failure }
 
 class UserController extends BaseController with FutureSupport {
 
   val logger = LoggerFactory.getLogger(getClass)
 
   protected implicit val jsonFormats: Formats = DefaultFormats
+
   protected implicit def executor: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
-  get("/users"){
+  get("/") {
     UserStore.getAllUsers
   }
 
-  get("/users/byId/:userId"){
-    val userId: Int = params.get("userId").map(_.toInt).getOrElse(0)
+  get("/byId/:userId") {
+    params.getAs[Int]("userId") match{
+      case Some(userId) => UserStore.getUserById(userId)
+      case None => BadRequest(Map(MESSAGE_KEY -> MANDATORY_PARAM_IS_MISSING))}
+  }
 
-    if(userId > 0) {
-      UserStore.getUserById(userId)
-    }
 
-    else{
-      BadRequest(Map(MESSAGE_KEY -> MANDATORY_PARAM_IS_MISSING))
+  get("/byName/:userName") {
+    params.getAs[String]("userName") match{
+      case Some(userName) => UserStore.getUserByName(userName)
+      case None => BadRequest(Map(MESSAGE_KEY -> MANDATORY_PARAM_IS_MISSING))
     }
   }
 
-  get("/users/byName/:userName"){
-    val userName: String = params.get("userName").map(_.toString).getOrElse("")
+  post("/") {
 
-    if(userName.isEmpty){
-      BadRequest(Map(MESSAGE_KEY -> MANDATORY_PARAM_IS_MISSING))
+    parsedBody.extractOpt[UserData] match{
+      case Some(userData) => UserStore.addUser(userData.name, userData.age.getOrElse[Int](0))
+      case None => BadRequest(Map(MESSAGE_KEY -> MANDATORY_POST_DATA_MISSING))
     }
-
-    else{
-      UserStore.getUserByName(userName)
-    }
-
   }
 
-  post("/users"){
+  put("/:userId") {
 
-    val userDataOpt = parsedBody.extractOpt[UserData]
+    params.getAs[Int]("userId") match {
 
-    userDataOpt.map{userData =>
+      case Some(userId) => {
+        parsedBody.extractOpt[UserData] match {
 
-      UserStore.addUser(userData.name, userData.age)
+          case Some(userData) => UserStore.updateUser(userId, userData.name, userData.age.getOrElse(0)) match {
 
-    }.getOrElse(BadRequest(Map(MESSAGE_KEY -> MANDATORY_POST_DATA_MISSING)))
+            case true => Ok(Map(MESSAGE_KEY -> UPDATE_SUCCEED))
 
-  }
+            case false => Conflict(Map(MESSAGE_KEY -> UPDATE_FAILED))
+          }
 
-  put("/users/:userId"){
-
-    val userId = params.get("userId").map(_.toInt).getOrElse(0)
-
-    val userDataOpt = parsedBody.extractOpt[UserData]
-
-    if(userId > 0) {
-      userDataOpt.map { userData =>
-
-        UserStore.updateUser(userId, userData.name, userData.age) match{
-          case true => Ok(Map(MESSAGE_KEY -> UPDATE_SUCCEED))
-          case false => Conflict(Map(MESSAGE_KEY -> UPDATE_FAILED))
+          case None => BadRequest(Map(MESSAGE_KEY -> MANDATORY_POST_DATA_MISSING))
         }
+      }
 
-      }.getOrElse(BadRequest(Map(MESSAGE_KEY -> MANDATORY_POST_DATA_MISSING)))
-
+      case None => Map(MESSAGE_KEY -> MANDATORY_PARAM_IS_MISSING)
     }
-    else
-      BadRequest(Map(MESSAGE_KEY -> MANDATORY_PARAM_IS_MISSING))
   }
 
-  delete("/users/byId/:userId"){
+  delete("/byId/:userId") {
 
-    val userId = params.get("userId").map(_.toInt).getOrElse(0)
+    params.getAs[Int]("userId") match {
 
-    if(userId > 0){
-      UserStore.deleteUser(userId) match{
-        case true => Ok(Map(MESSAGE_KEY -> DELETE_SUCCEED))
-        case false => Conflict(Map(MESSAGE_KEY -> DELETE_FAILED))
+      case Some(id) => {
+
+        UserStore.deleteUser(id) match {
+
+          case true => Ok(Map(MESSAGE_KEY -> DELETE_SUCCEED))
+
+          case false => Conflict(Map(MESSAGE_KEY -> DELETE_FAILED))
+        }
       }
+
+      case None => BadRequest(Map(MESSAGE_KEY -> MANDATORY_PARAM_IS_MISSING))
     }
-
-    else
-      BadRequest(Map(MESSAGE_KEY -> MANDATORY_PARAM_IS_MISSING))
-
   }
 
-  delete("/users/byName/:userName"){
-    val userName = params.get("userName").map(_.toString).getOrElse("")
+  delete("/byName/:userName") {
+    params.getAs[String]("userName") match {
 
-    if(!userName.isEmpty){
-      UserStore.deleteUserByName(userName) match{
-        case true => Ok(Map(MESSAGE_KEY -> DELETE_SUCCEED))
-        case false => Conflict(Map(MESSAGE_KEY -> DELETE_FAILED))
+      case Some(name) => {
+
+        UserStore.deleteUserByName(name) match {
+
+          case true => Ok(Map(MESSAGE_KEY -> DELETE_SUCCEED))
+
+          case false => Conflict(Map(MESSAGE_KEY -> DELETE_FAILED))
+        }
       }
-    }
 
-    else
-      BadRequest(Map(MESSAGE_KEY -> MANDATORY_PARAM_IS_MISSING))
+      case None => BadRequest(Map(MESSAGE_KEY -> MANDATORY_PARAM_IS_MISSING))
+
+    }
   }
 }
+

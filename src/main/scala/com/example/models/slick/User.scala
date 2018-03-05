@@ -4,10 +4,7 @@ import com.example.models.slick.slickDB._
 import org.slf4j.LoggerFactory
 import scala.slick.driver.MySQLDriver.simple._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
-
-case class User(id: Option[Int], name: String, age: Int=0){
+case class User(id: Option[Int], name: String, age: Int){
 
   def toMap = {
     Map("id" -> id, "name" -> name, "age" -> age)
@@ -32,94 +29,92 @@ object User {
   val logger = LoggerFactory.getLogger(getClass())
 
   def creatTable(): Unit = {
-    db withSession {implicit session =>
+    db withSession { implicit session =>
       users.ddl.create
     }
   }
 
   def initTable(): Unit = {
-    db withSession {implicit session =>
-      users returning users.map(_.id) insertAll (User(None, "Lucas", 24), User(None, "LRS", 24))
+    db withSession { implicit session =>
+      users returning users.map(_.id) insertAll(User(None, "Lucas", 24), User(None, "LRS", 24))
     }
   }
 
   def all(): List[User] = {
-    try{
-      db withSession{implicit session =>
+    try {
+      db withSession { implicit session =>
         users.list
       }
     }
   }
 
   def insert(name: String, age: Int): Option[User] = {
-    try{
-      db withSession{implicit session =>
-        users returning users.map(_.id) insert (User(None, name, age)) match{
+    try {
+      db withSession { implicit session =>
+        users returning users.map(_.id) insert (User(None, name, age)) match {
           case id: Int => Some(User(Some(id), name, age))
         }
       }
     }
   }
 
-  def get(id: Int): Option[User] = {
-    try{
-      db withSession{implicit session =>
-        users.filter(_.id === id).firstOption
-      }
-    }
-  }
+  def get(id: Option[Int], name: Option[String]): Option[User] = {
+    try {
+      (id, name) match {
 
-  def getByName(name: String): Option[User] = {
-    try{
-      db withSession{implicit session =>
-        users.filter(_.name === name).firstOption
-      }
-    }
-  }
-
-  def delete(id: Int): Boolean = {
-    try{
-      db withSession{implicit session =>
-        users.filter(_.id === id).delete match{
-          case 1 => true
-          case _ => false
+        case (Some(user_id), _) => {
+          db withSession { implicit session =>
+            users.filter(_.id === user_id).firstOption
+          }
         }
+
+        case (_, Some(user_name)) => {
+          db withSession { implicit session =>
+            users.filter(_.name === user_name).firstOption
+          }
+        }
+
+        case(_, _) => None
       }
     }
   }
 
-  def deleteByName(name: String): Boolean = {
-    try{
-      db withSession{implicit session =>
-        users.filter(_.name === name).delete match{
-          case 1 => true
-          case _ => false
+  def delete(id: Option[Int], name: Option[String]): Boolean = {
+    try {
+      (id, name) match {
+        case (Some(user_id), _) => {
+          db withSession { implicit session =>
+            users.filter(_.id === user_id).delete match {
+              case 1 => true
+              case _ => false
+            }
+          }
         }
+
+        case (_, Some(user_name)) => {
+          db withSession { implicit session =>
+            users.filter(_.name === user_name).delete match {
+              case 1 => true
+              case _ => false
+            }
+          }
+        }
+
+        case (_, _) => false
       }
     }
   }
 
   def update(id: Int, name: String, age: Int): Boolean = {
-    try{
-      db withSession{implicit session =>
-        users.filter(_.id === id).map(p => (p.name, p.age)).update((name, age)) match{
+    try {
+      db withSession { implicit session =>
+        users.filter(_.id === id).map(p => (p.name, p.age)).update((name, age)) match {
           case 1 => true
           case _ => false
         }
-      }
-    }
-  }
-
-  def updateByName(name: String, age: Int): Boolean = {
-    try{
-      db withSession{implicit session =>
-        users.filter(_.name === name).map(_.age).update(age) match{
-          case 1 => true
-          case _ => false
-        }
-
       }
     }
   }
 }
+
 
