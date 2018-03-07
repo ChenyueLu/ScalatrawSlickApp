@@ -2,7 +2,7 @@ val ScalatraVersion = "2.3.2"
 
 organization := "com.example"
 
-name := "Test App"
+name := "test-app"
 
 version := "0.1.0-SNAPSHOT"
 
