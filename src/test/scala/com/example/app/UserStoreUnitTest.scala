@@ -29,7 +29,7 @@ class UserStoreUnitTest extends FlatSpec {
       case Success(userOpt) =>
         userOpt match{
           case Some(user) => {
-            if(user.id.equals(userId) && user.name.equals("Test") && user.age.equals(50)) true
+            if(user.id.get == userId && user.name.equals("Test") && user.age == 50) true
             else false
           }
           case _ => false
