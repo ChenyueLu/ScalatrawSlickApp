@@ -22,8 +22,9 @@ libraryDependencies ++= Seq(
   "org.eclipse.jetty" % "jetty-webapp" % "9.4.8.v20171121" % "container",
   "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
   "mysql" % "mysql-connector-java" % "5.1.34",
+  "org.postgresql" % "postgresql" % "42.0.0",
   "com.typesafe.slick" %% "slick" % "2.1.0",
-  "c3p0" % "c3p0" % "0.9.1.2"
+  "com.mchange" % "c3p0" % "0.9.5.2"
 )
 
 enablePlugins(SbtTwirl)

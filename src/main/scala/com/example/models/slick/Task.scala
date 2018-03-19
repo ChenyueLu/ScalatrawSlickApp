@@ -1,8 +1,8 @@
 package com.example.models.slick
 
-import com.example.models.slick.slickDB._
+import com.example.models.slick.SlickDB._
 import org.slf4j.LoggerFactory
-import scala.slick.driver.MySQLDriver.simple._
+import profile.simple._
 
 case class Task(id: Option[Int], name: String, action: String){
 

@@ -1,8 +1,8 @@
 package com.example.models.slick
 
-import com.example.models.slick.slickDB._
+import com.example.models.slick.SlickDB._
 import org.slf4j.LoggerFactory
-import scala.slick.driver.MySQLDriver.simple._
+import profile.simple._
 
 case class User(id: Option[Int], name: String, age: Int){
 
@@ -15,8 +15,8 @@ case class User(id: Option[Int], name: String, age: Int){
 class Users(tag: Tag) extends Table[User](tag, "users"){
 
   def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
-  def name = column[String]("name")
-  def age = column[Int]("age")
+  def name = column[String]("name", O.DBType("VARCHAR(1000)"))
+  def age = column[Int]("age", O.DBType("SMALLINT"))
 
   def * = (id.?, name, age) <> ((User.apply _).tupled, User.unapply)
 
@@ -43,7 +43,9 @@ object User {
   def all(): List[User] = {
     try {
       db withSession { implicit session =>
-        users.list
+        val query = users
+        logger.info(query.selectStatement)
+        query.list
       }
     }
   }

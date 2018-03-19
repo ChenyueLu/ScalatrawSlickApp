@@ -153,5 +153,12 @@ class UserController(implicit val swagger: Swagger) extends BaseController with 
 
     }
   }
+
+  get("/create-tables"){
+    UserStore.createUserTable()
+  }
+  get("/init-tables"){
+    UserStore.initUserTable()
+  }
 }
 

@@ -4,9 +4,9 @@ import com.mchange.v2.c3p0.ComboPooledDataSource
 import org.slf4j.LoggerFactory
 import com.example.commons.AppConfig
 
-import slick.driver.{JdbcProfile, MySQLDriver}
+import slick.driver.{JdbcProfile, MySQLDriver, PostgresDriver}
 
-object slickDB {
+object SlickDB {
 
   val logger = LoggerFactory.getLogger(getClass)
 
@@ -21,7 +21,8 @@ object slickDB {
 
 
   val profile: JdbcProfile = source match{
-    case _ => MySQLDriver
+    case "mysql" => MySQLDriver
+    case "psql" => PostgresDriver
   }
 
   // Create connection for connection pool
@@ -34,6 +35,8 @@ object slickDB {
   cpds.setAcquireIncrement(3)
   cpds.setMaxPoolSize(30)
   cpds.setMaxIdleTime(600)
+  cpds.setMaxStatements(180)
+  cpds.setMaxStatementsPerConnection(100)
   cpds.setTestConnectionOnCheckout(true)
 
   import profile.simple._
